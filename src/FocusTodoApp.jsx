@@ -265,7 +265,7 @@ const FocusTodoApp = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center bg-gray-100 relative">
+    <div className="h-screen flex flex-col items-center justify-center bg-[#F8DD74] relative">
       {/* Routine Save Modal */}
       {isRoutineModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
@@ -297,7 +297,7 @@ const FocusTodoApp = () => {
 
       {/* Routines Sidebar */}
       <div className={`
-        fixed top-0 right-0 h-full w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        fixed top-0 right-0 h-full w-80 bg-[#FFF5E1] shadow-lg transform transition-transform duration-300 ease-in-out
         ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
         z-50 p-6 overflow-y-auto
       `}>
@@ -403,7 +403,7 @@ const FocusTodoApp = () => {
                   {/* Total Time Completed */}
                   <div className="mt-6 pt-4 text-center">
             <h3 className="text-lg font-semibold mb-2">Total Time Completed</h3>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold">
               {formatTotalTime(totalCompletedTime)}
             </div>
           </div>
@@ -448,7 +448,7 @@ const FocusTodoApp = () => {
       {/* Current Task */}
       {currentTask && (
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">{currentTask.text}</h1>
+          <h1 className="text-4xl font-bold mb-4" style={{color: 'rgb(211,66,195)'}}>{currentTask.text}</h1>
           
           {/* Subtle Timer */}
           <div className="flex items-center justify-center space-x-2 text-gray-600">
@@ -457,15 +457,15 @@ const FocusTodoApp = () => {
           </div>
 
           {/* Control Buttons */}
-          <div className="mt-8 space-x-4">
+          <div className="mt-8 space-x-4 flex justify-center items-center">
             <button 
-              className="bg-blue-500 text-white p-3 rounded-full"
+              className="bg-[#00CCCC] text-white p-3 rounded-full"
               onClick={toggleTimer}
             >
               {isRunning ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8" />}
             </button>
             <button 
-              className="bg-gray-200 text-gray-700 p-3 rounded-full"
+              className="bg-[#FFF5E1] text-gray-700 p-3 rounded-full"
               onClick={skipToNextTask}
             >
               Complete
