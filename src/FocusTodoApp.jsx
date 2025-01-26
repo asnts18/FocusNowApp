@@ -90,6 +90,17 @@ const FocusTodoApp = () => {
     localStorage.setItem('focusTodoRoutines', JSON.stringify(updatedRoutines));
   };
 
+  // Calculate total time for routine
+  const calculateRoutineTotalTime = (routine) => {
+    const totalSeconds = routine.tasks.reduce((sum, task) => sum + task.duration, 0);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    
+    return hours > 0 
+      ? `${hours}h ${minutes}m` 
+      : `${minutes}m`;
+  };
+
   // Add a new task
   const addTask = () => {
     if (newTask.trim() && newTaskTime > 0) {
@@ -97,7 +108,9 @@ const FocusTodoApp = () => {
         id: Date.now(),
         text: newTask,
         duration: newTaskTime * 60, // Convert minutes to seconds
-        completed: false
+        completed: false,
+        actualTime: null, 
+        startTime: null  
       };
       setTasks([...tasks, task]);
       if (!currentTask) {
@@ -161,32 +174,88 @@ const FocusTodoApp = () => {
     setIsRunning(!isRunning);
   };
 
+  // Add a new state to track total completed time
+  const [totalCompletedTime, setTotalCompletedTime] = useState(0);
+
   // Move to next task
   const skipToNextTask = () => {
     const currentTaskIndex = tasks.findIndex(task => task.id === currentTask.id);
-
+  
     if (currentTaskIndex !== -1 && currentTaskIndex + 1 < tasks.length) {
       const nextTask = tasks[currentTaskIndex + 1];
+      
+      // Calculate actual time taken
+      const actualTimeTaken = currentTask.duration - timeRemaining;
+      
       setTasks(tasks => tasks.map(task =>
-        task.id === currentTask.id ? { ...task, completed: true } : task
+        task.id === currentTask.id 
+          ? { 
+              ...task, 
+              completed: true, 
+              actualTime: actualTimeTaken 
+            } 
+          : task
       ));
+      
+      // Update total completed time
+      setTotalCompletedTime(prev => prev + actualTimeTaken);
+      
       setCurrentTask(nextTask);
       setTimeRemaining(nextTask.duration);
       setIsRunning(true);
     } else {
+      // Similar logic for the last task
+      const actualTimeTaken = currentTask.duration - timeRemaining;
+      
+      setTasks(tasks => tasks.map(task =>
+        task.id === currentTask.id 
+          ? { 
+              ...task, 
+              completed: true, 
+              actualTime: actualTimeTaken 
+            } 
+          : task
+      ));
+      
+      // Update total completed time
+      setTotalCompletedTime(prev => prev + actualTimeTaken);
+      
       setCurrentTask(null);
       setTimeRemaining(0);
       setIsRunning(false);
     }
   };
-
-
+  
+  // Create a function to format total time
+  const formatTotalTime = (totalSeconds) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+  
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  };
+  
 
   // Format time display
-  const formatTime = (seconds) => {
+  const formatTime = (seconds, format = 'timer') => {
+    if (seconds === null || seconds === undefined) return '';
+    
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    
+    if (format === 'timer') {
+      return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    } else if (format === 'actual') {
+      return minutes > 0 
+        ? `${minutes}m ${remainingSeconds}s` 
+        : `${remainingSeconds}s`;
+    }
   };
 
   // Get next task
@@ -264,7 +333,7 @@ const FocusTodoApp = () => {
                 <div>
                   <span>{routine.name}</span>
                   <span className="text-sm text-gray-500 ml-2">
-                    {routine.tasks.length} tasks
+                    {routine.tasks.length} tasks • {calculateRoutineTotalTime(routine)}
                   </span>
                 </div>
                 <div className="flex space-x-2">
@@ -289,6 +358,7 @@ const FocusTodoApp = () => {
         {/* Existing Task List */}
         <div>
           <h3 className="text-xl font-semibold mb-4">Current Tasks</h3>
+
           {tasks.length === 0 ? (
             <p className="text-gray-500 text-center">No tasks added yet</p>
           ) : (
@@ -304,7 +374,9 @@ const FocusTodoApp = () => {
                 <div>
                   <span>{task.text}</span>
                   <span className="text-sm text-gray-500 ml-2">
-                    {formatTime(task.duration)}
+                    {task.completed && task.actualTime !== null 
+          ? `(${formatTime(task.actualTime, 'actual')})` 
+          : formatTime(task.duration)}
                   </span>
                 </div>
                 <div className="flex space-x-2">
@@ -327,7 +399,19 @@ const FocusTodoApp = () => {
             ))
           )}
         </div>
+
+                  {/* Total Time Completed */}
+                  <div className="mt-6 pt-4 text-center">
+            <h3 className="text-lg font-semibold mb-2">Total Time Completed</h3>
+            <div className="text-2xl font-bold text-blue-600">
+              {formatTotalTime(totalCompletedTime)}
+            </div>
+          </div>
+          
+          
       </div>
+
+      
 
       {/* Task Input (top right) */}
       <div className="absolute top-4 right-4 flex space-x-2">
@@ -384,7 +468,7 @@ const FocusTodoApp = () => {
               className="bg-gray-200 text-gray-700 p-3 rounded-full"
               onClick={skipToNextTask}
             >
-              Skip
+              Complete
             </button>
           </div>
         </div>
